@@ -21,7 +21,7 @@ impl Operation for Case {
         let value = context.vm.pop();
 
         if value.strict_equals(&cond) {
-            context.vm.frame_mut().pc = address;
+            context.vm.frame_mut().pc = address as usize;
         } else {
             context.vm.push(value);
         }
@@ -43,7 +43,7 @@ impl Operation for Default {
     fn execute(context: &mut Context<'_>) -> JsResult<CompletionType> {
         let exit = context.vm.read::<u32>();
         let _val = context.vm.pop();
-        context.vm.frame_mut().pc = exit;
+        context.vm.frame_mut().pc = exit as usize;
         Ok(CompletionType::Normal)
     }
 }

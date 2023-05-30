@@ -823,7 +823,6 @@ impl Object {
                 ObjectKind::Boolean(_) => utf16!("Boolean"),
                 ObjectKind::Number(_) => utf16!("Number"),
                 ObjectKind::String(_) => utf16!("String"),
-                ObjectKind::Date(_) => utf16!("Date"),
                 ObjectKind::RegExp(_) => utf16!("RegExp"),
                 _ => utf16!("Object"),
             }

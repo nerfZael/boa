@@ -100,6 +100,7 @@ impl Realm {
         &self.inner.global_this
     }
 
+    #[allow(unused)]
     pub(crate) fn loaded_modules(&self) -> &GcRefCell<FxHashMap<JsString, Module>> {
         &self.inner.loaded_modules
     }

@@ -1,9 +1,8 @@
 use crate::{
     builtins::array::Array,
-    object::IntegrityLevel,
     property::PropertyDescriptor,
     vm::{opcode::Operation, CompletionType},
-    Context, JsResult,
+    Context, JsResult, object::IntegrityLevel,
 };
 use boa_macros::utf16;
 
@@ -24,7 +23,7 @@ impl Operation for TemplateLookup {
 
         if let Some(template) = context.realm().lookup_template(site) {
             context.vm.push(template);
-            context.vm.frame_mut().pc = jump;
+            context.vm.frame_mut().pc = jump as usize;
         }
 
         Ok(CompletionType::Normal)

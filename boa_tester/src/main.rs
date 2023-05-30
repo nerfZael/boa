@@ -63,7 +63,8 @@
 #![allow(
     clippy::too_many_lines,
     clippy::redundant_pub_crate,
-    clippy::cast_precision_loss
+    clippy::cast_precision_loss,
+    clippy::cast_possible_wrap
 )]
 
 mod edition;

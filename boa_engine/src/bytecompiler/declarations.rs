@@ -1,9 +1,6 @@
 use crate::{
     bytecompiler::{ByteCompiler, FunctionCompiler, FunctionSpec, Label, NodeKind},
-    vm::{
-        create_function_object_fast, create_generator_function_object, BindingOpcode,
-        CodeBlockFlags, Opcode,
-    },
+    vm::{create_function_object_fast, create_generator_function_object, BindingOpcode, Opcode},
     JsNativeError, JsResult,
 };
 use boa_ast::{
@@ -263,7 +260,7 @@ impl ByteCompiler<'_, '_> {
                 .name(name.sym())
                 .generator(generator)
                 .r#async(r#async)
-                .strict(self.strict())
+                .strict(self.strict)
                 .binding_identifier(Some(name.sym()))
                 .compile(
                     parameters,
@@ -675,7 +672,7 @@ impl ByteCompiler<'_, '_> {
                 .name(name.sym())
                 .generator(generator)
                 .r#async(r#async)
-                .strict(self.strict())
+                .strict(self.strict)
                 .binding_identifier(Some(name.sym()))
                 .compile(
                     parameters,
@@ -780,8 +777,8 @@ impl ByteCompiler<'_, '_> {
         arrow: bool,
         strict: bool,
         generator: bool,
-    ) -> (Option<Label>, bool) {
-        let mut env_label = None;
+    ) -> (Option<(Label, Label)>, bool) {
+        let mut env_labels = None;
         let mut additional_env = false;
 
         // 1. Let calleeContext be the running execution context.
@@ -847,7 +844,7 @@ impl ByteCompiler<'_, '_> {
         function_names.reverse();
         functions_to_initialize.reverse();
 
-        // 15. Let argumentsObjectNeeded be true.
+        //15. Let argumentsObjectNeeded be true.
         let mut arguments_object_needed = true;
 
         let arguments = Sym::ARGUMENTS.into();
@@ -885,36 +882,6 @@ impl ByteCompiler<'_, '_> {
             additional_env = true;
         }
 
-        // 22. If argumentsObjectNeeded is true, then
-        //
-        // NOTE(HalidOdat): Has been moved up, so "arguments" gets registed as
-        //     the first binding in the environment with index 0.
-        if arguments_object_needed {
-            // Note: This happens at runtime.
-            // a. If strict is true or simpleParameterList is false, then
-            //     i. Let ao be CreateUnmappedArgumentsObject(argumentsList).
-            // b. Else,
-            //     i. NOTE: A mapped argument object is only provided for non-strict functions
-            //              that don't have a rest parameter, any parameter
-            //              default value initializers, or any destructured parameters.
-            //     ii. Let ao be CreateMappedArgumentsObject(func, formals, argumentsList, env).
-
-            // c. If strict is true, then
-            if strict {
-                // i. Perform ! env.CreateImmutableBinding("arguments", false).
-                // ii. NOTE: In strict mode code early errors prevent attempting to assign
-                //           to this binding, so its mutability is not observable.
-                self.create_immutable_binding(arguments, false);
-            }
-            // d. Else,
-            else {
-                // i. Perform ! env.CreateMutableBinding("arguments", false).
-                self.create_mutable_binding(arguments, false);
-            }
-
-            self.code_block_flags |= CodeBlockFlags::NEEDS_ARGUMENTS_OBJECT;
-        }
-
         // 21. For each String paramName of parameterNames, do
         for param_name in &parameter_names {
             // a. Let alreadyDeclared be ! env.HasBinding(paramName).
@@ -936,9 +903,29 @@ impl ByteCompiler<'_, '_> {
 
         // 22. If argumentsObjectNeeded is true, then
         if arguments_object_needed {
-            // MOVED: a-d.
-            //
-            // NOTE(HalidOdat): Has been moved up, see comment above.
+            // Note: This happens at runtime.
+            // a. If strict is true or simpleParameterList is false, then
+            //     i. Let ao be CreateUnmappedArgumentsObject(argumentsList).
+            // b. Else,
+            //     i. NOTE: A mapped argument object is only provided for non-strict functions
+            //              that don't have a rest parameter, any parameter
+            //              default value initializers, or any destructured parameters.
+            //     ii. Let ao be CreateMappedArgumentsObject(func, formals, argumentsList, env).
+
+            // c. If strict is true, then
+            if strict {
+                // i. Perform ! env.CreateImmutableBinding("arguments", false).
+                // ii. NOTE: In strict mode code early errors prevent attempting to assign
+                //           to this binding, so its mutability is not observable.
+                self.create_immutable_binding(arguments, false);
+                self.arguments_binding = Some(self.initialize_immutable_binding(arguments));
+            }
+            // d. Else,
+            else {
+                // i. Perform ! env.CreateMutableBinding("arguments", false).
+                self.create_mutable_binding(arguments, false);
+                self.arguments_binding = Some(self.initialize_mutable_binding(arguments, false));
+            }
 
             // Note: This happens at runtime.
             // e. Perform ! env.InitializeBinding("arguments", ao).
@@ -946,7 +933,6 @@ impl ByteCompiler<'_, '_> {
             // f. Let parameterBindings be the list-concatenation of parameterNames and « "arguments" ».
             parameter_names.push(arguments);
         }
-
         // 23. Else,
         //     a. Let parameterBindings be parameterNames.
         let parameter_bindings = parameter_names.clone();
@@ -1001,7 +987,8 @@ impl ByteCompiler<'_, '_> {
             // b. Let varEnv be NewDeclarativeEnvironment(env).
             // c. Set the VariableEnvironment of calleeContext to varEnv.
             self.push_compile_environment(true);
-            env_label = Some(self.emit_opcode_with_operand(Opcode::PushFunctionEnvironment));
+            self.function_environment_push_location = self.next_opcode_location();
+            env_labels = Some(self.emit_opcode_with_two_operands(Opcode::PushFunctionEnvironment));
 
             // d. Let instantiatedVarNames be a new empty List.
             let mut instantiated_var_names = Vec::new();
@@ -1065,6 +1052,7 @@ impl ByteCompiler<'_, '_> {
             }
 
             // d. Let varEnv be env.
+
             instantiated_var_names
         };
 
@@ -1163,6 +1151,6 @@ impl ByteCompiler<'_, '_> {
         }
 
         // 37. Return unused.
-        (env_label, additional_env)
+        (env_labels, additional_env)
     }
 }

@@ -183,6 +183,7 @@ impl Debug for Profiler {
 #[derive(Copy, Clone)]
 pub struct Profiler;
 
+//#[allow(clippy::unused_unit, clippy::unused_self)]
 #[cfg(not(feature = "profiler"))]
 impl Profiler {
     /// Does nothing.

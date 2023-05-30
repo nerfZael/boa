@@ -19,17 +19,18 @@ pub(crate) use env_stack::EnvStackEntry;
 #[derive(Clone, Debug, Finalize, Trace)]
 pub struct CallFrame {
     pub(crate) code_block: Gc<CodeBlock>,
-    pub(crate) pc: u32,
-    pub(crate) fp: u32,
+    pub(crate) pc: usize,
+    pub(crate) fp: usize,
     #[unsafe_ignore_trace]
     pub(crate) abrupt_completion: Option<AbruptCompletionRecord>,
     #[unsafe_ignore_trace]
     pub(crate) r#yield: bool,
-    pub(crate) pop_on_return: u32,
+    pub(crate) pop_on_return: usize,
     // Tracks the number of environments in environment entry.
     // On abrupt returns this is used to decide how many environments need to be pop'ed.
     pub(crate) env_stack: Vec<EnvStackEntry>,
-    pub(crate) argument_count: u32,
+    pub(crate) param_count: usize,
+    pub(crate) arg_count: usize,
     #[unsafe_ignore_trace]
     pub(crate) generator_resume_kind: GeneratorResumeKind,
     pub(crate) promise_capability: Option<PromiseCapability>,
@@ -67,7 +68,8 @@ impl CallFrame {
             env_stack: Vec::from([EnvStackEntry::new(0, max_length)]),
             abrupt_completion: None,
             r#yield: false,
-            argument_count: 0,
+            param_count: 0,
+            arg_count: 0,
             generator_resume_kind: GeneratorResumeKind::Normal,
             promise_capability: None,
             async_generator: None,
@@ -76,16 +78,22 @@ impl CallFrame {
         }
     }
 
-    /// Updates a `CallFrame`'s `argument_count` field with the value provided.
-    pub(crate) fn with_argument_count(mut self, count: u32) -> Self {
-        self.argument_count = count;
+    /// Updates a `CallFrame`'s `param_count` field with the value provided.
+    pub(crate) fn with_param_count(mut self, count: usize) -> Self {
+        self.param_count = count;
+        self
+    }
+
+    /// Updates a `CallFrame`'s `arg_count` field with the value provided.
+    pub(crate) fn with_arg_count(mut self, count: usize) -> Self {
+        self.arg_count = count;
         self
     }
 }
 
 /// ---- `CallFrame` stack methods ----
 impl CallFrame {
-    pub(crate) fn set_frame_pointer(&mut self, pointer: u32) {
+    pub(crate) fn set_frame_pointer(&mut self, pointer: usize) {
         self.fp = pointer;
     }
 

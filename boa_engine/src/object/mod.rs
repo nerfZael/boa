@@ -54,7 +54,7 @@ use crate::{
         set::SetIterator,
         string::StringIterator,
         typed_array::{integer_indexed_object::IntegerIndexed, TypedArrayKind},
-        DataView, Date, Promise, RegExp,
+        DataView, Promise, RegExp,
     },
     js_string,
     module::ModuleNamespace,
@@ -300,9 +300,6 @@ pub enum ObjectKind {
     /// The `Proxy` object kind.
     Proxy(Proxy),
 
-    /// The `Date` object kind.
-    Date(Date),
-
     /// The `Global` object kind.
     Global,
 
@@ -400,7 +397,6 @@ unsafe impl Trace for ObjectKind {
             | Self::BigInt(_)
             | Self::Boolean(_)
             | Self::String(_)
-            | Self::Date(_)
             | Self::Array
             | Self::Error(_)
             | Self::Ordinary
@@ -669,15 +665,6 @@ impl ObjectData {
         }
     }
 
-    /// Create the `Date` object data
-    #[must_use]
-    pub fn date(date: Date) -> Self {
-        Self {
-            kind: ObjectKind::Date(date),
-            internal_methods: &ORDINARY_INTERNAL_METHODS,
-        }
-    }
-
     /// Create the `Arguments` object data
     pub fn arguments(arguments: Arguments) -> Self {
         Self {
@@ -843,7 +830,6 @@ impl Debug for ObjectKind {
             Self::Boolean(_) => "Boolean",
             Self::Number(_) => "Number",
             Self::BigInt(_) => "BigInt",
-            Self::Date(_) => "Date",
             Self::Global => "Global",
             Self::Arguments(_) => "Arguments",
             Self::NativeObject(_) => "NativeObject",
@@ -1264,30 +1250,6 @@ impl Object {
     pub const fn as_bigint(&self) -> Option<&JsBigInt> {
         match self.kind {
             ObjectKind::BigInt(ref bigint) => Some(bigint),
-            _ => None,
-        }
-    }
-
-    /// Checks if the object is a `Date` object.
-    #[inline]
-    pub const fn is_date(&self) -> bool {
-        matches!(self.kind, ObjectKind::Date(_))
-    }
-
-    /// Gets the date data if the object is a `Date`.
-    #[inline]
-    pub const fn as_date(&self) -> Option<&Date> {
-        match self.kind {
-            ObjectKind::Date(ref date) => Some(date),
-            _ => None,
-        }
-    }
-
-    /// Gets the mutable date data if the object is a `Date`.
-    #[inline]
-    pub fn as_date_mut(&mut self) -> Option<&mut Date> {
-        match self.kind {
-            ObjectKind::Date(ref mut date) => Some(date),
             _ => None,
         }
     }

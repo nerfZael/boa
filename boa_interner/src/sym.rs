@@ -148,6 +148,5 @@ static_syms! {
     "__proto__",
     "name",
     "await",
-    ("*default*", DEFAULT_EXPORT),
-    "meta"
+    ("*default*", DEFAULT_EXPORT)
 }

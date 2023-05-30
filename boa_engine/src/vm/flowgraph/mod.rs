@@ -359,6 +359,7 @@ impl CodeBlock {
                     environments.push((previous_pc, random));
 
                     pc += size_of::<u32>();
+                    pc += size_of::<u32>();
 
                     graph.add_node(
                         previous_pc,
@@ -583,8 +584,7 @@ impl CodeBlock {
                 | Opcode::PushClassField
                 | Opcode::SuperCallDerived
                 | Opcode::Await
-                | Opcode::NewTarget
-                | Opcode::ImportMeta
+                | Opcode::PushNewTarget
                 | Opcode::CallEvalSpread
                 | Opcode::CallSpread
                 | Opcode::NewSpread

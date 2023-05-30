@@ -1,6 +1,9 @@
 //! A Rust API wrapper for Boa's promise Builtin ECMAScript Object
 
-use super::{JsArray, JsFunction};
+#![allow(missing_docs)]
+
+use boa_gc::{Finalize, Trace};
+
 use crate::{
     builtins::{
         promise::{PromiseState, ResolvingFunctions},
@@ -11,7 +14,8 @@ use crate::{
     value::TryFromJs,
     Context, JsError, JsNativeError, JsResult, JsValue,
 };
-use boa_gc::{Finalize, Trace};
+
+use super::{JsArray, JsFunction};
 
 /// An ECMAScript [promise] object.
 ///

@@ -3,6 +3,15 @@ use crate::environments::{BindingLocator, CompileTimeEnvironment};
 use boa_ast::expression::Identifier;
 use boa_gc::{Gc, GcRefCell};
 
+/// Info returned by the [`ByteCompiler::pop_compile_environment`] method.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct PopEnvironmentInfo {
+    /// Number of bindings declared.
+    pub(crate) num_bindings: u32,
+    /// Index in the compile time envs array.
+    pub(crate) index: u32,
+}
+
 impl ByteCompiler<'_, '_> {
     /// Push either a new declarative or function environment on the compile time environment stack.
     pub(crate) fn push_compile_environment(&mut self, function_scope: bool) {
@@ -12,20 +21,26 @@ impl ByteCompiler<'_, '_> {
         )));
     }
 
-    /// Pops the top compile time environment and returns its index in the compile time environments array.
+    /// Pops the top compile time environment and returns its index and number of bindings.
     #[track_caller]
-    pub(crate) fn pop_compile_environment(&mut self) -> u32 {
+    pub(crate) fn pop_compile_environment(&mut self) -> PopEnvironmentInfo {
         let index = self.compile_environments.len() as u32;
         self.compile_environments
             .push(self.current_environment.clone());
 
-        let outer = {
+        let (num_bindings, outer) = {
             let env = self.current_environment.borrow();
-            env.outer().expect("cannot pop the global environment")
+            (
+                env.num_bindings(),
+                env.outer().expect("cannot pop the global environment"),
+            )
         };
         self.current_environment = outer;
 
-        index
+        PopEnvironmentInfo {
+            num_bindings,
+            index,
+        }
     }
 
     /// Get the binding locator of the binding at bytecode compile time.

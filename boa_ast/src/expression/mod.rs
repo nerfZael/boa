@@ -133,9 +133,7 @@ pub enum Expression {
     /// The `new.target` pseudo-property expression.
     NewTarget,
 
-    /// The `import.meta` pseudo-property expression.
-    ImportMeta,
-
+    // TODO: import.meta
     /// See [`Assign`].
     Assign(Assign),
 
@@ -199,7 +197,6 @@ impl Expression {
             Self::ImportCall(impc) => impc.to_interned_string(interner),
             Self::Optional(opt) => opt.to_interned_string(interner),
             Self::NewTarget => "new.target".to_owned(),
-            Self::ImportMeta => "import.meta".to_owned(),
             Self::TaggedTemplate(tag) => tag.to_interned_string(interner),
             Self::Assign(assign) => assign.to_interned_string(interner),
             Self::Unary(unary) => unary.to_interned_string(interner),
@@ -319,7 +316,7 @@ impl VisitWith for Expression {
             Self::Yield(y) => visitor.visit_yield(y),
             Self::Parenthesized(e) => visitor.visit_parenthesized(e),
             Self::FormalParameterList(fpl) => visitor.visit_formal_parameter_list(fpl),
-            Self::This | Self::NewTarget | Self::ImportMeta => {
+            Self::This | Self::NewTarget => {
                 // do nothing; can be handled as special case by visitor
                 ControlFlow::Continue(())
             }
@@ -361,7 +358,7 @@ impl VisitWith for Expression {
             Self::Yield(y) => visitor.visit_yield_mut(y),
             Self::Parenthesized(e) => visitor.visit_parenthesized_mut(e),
             Self::FormalParameterList(fpl) => visitor.visit_formal_parameter_list_mut(fpl),
-            Self::This | Self::NewTarget | Self::ImportMeta => {
+            Self::This | Self::NewTarget => {
                 // do nothing; can be handled as special case by visitor
                 ControlFlow::Continue(())
             }

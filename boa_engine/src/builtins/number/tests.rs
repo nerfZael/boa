@@ -1,3 +1,5 @@
+#![allow(clippy::float_cmp)]
+
 use crate::{
     builtins::Number, run_test_actions, value::AbstractRelation, JsNativeErrorKind, TestAction,
 };

@@ -2153,6 +2153,7 @@ impl String {
         rx.invoke(JsSymbol::search(), &[JsValue::new(string)], context)
     }
 
+    #[allow(clippy::unnecessary_wraps)]
     pub(crate) fn iterator(
         this: &JsValue,
         _: &[JsValue],

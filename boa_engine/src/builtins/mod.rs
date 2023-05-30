@@ -8,7 +8,6 @@ pub mod async_generator_function;
 pub mod bigint;
 pub mod boolean;
 pub mod dataview;
-pub mod date;
 pub mod error;
 pub mod eval;
 pub mod function;
@@ -45,7 +44,6 @@ pub(crate) use self::{
     bigint::BigInt,
     boolean::Boolean,
     dataview::DataView,
-    date::Date,
     error::{
         AggregateError, Error, EvalError, RangeError, ReferenceError, SyntaxError, TypeError,
         UriError,
@@ -200,8 +198,6 @@ impl Realm {
         ArrayBuffer::init(self);
         BigInt::init(self);
         Boolean::init(self);
-        Date::init(self);
-        DataView::init(self);
         Map::init(self);
         MapIterator::init(self);
         IsFinite::init(self);
@@ -317,7 +313,6 @@ pub(crate) fn set_default_global_bindings(context: &mut Context<'_>) -> JsResult
     global_binding::<ArrayBuffer>(context)?;
     global_binding::<BigInt>(context)?;
     global_binding::<Boolean>(context)?;
-    global_binding::<Date>(context)?;
     global_binding::<DataView>(context)?;
     global_binding::<Map>(context)?;
     global_binding::<IsFinite>(context)?;

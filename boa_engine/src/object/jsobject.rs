@@ -540,17 +540,6 @@ impl JsObject {
         self.borrow().is_bigint()
     }
 
-    /// Checks if it's a `Date` object.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the object is currently mutably borrowed.
-    #[inline]
-    #[track_caller]
-    pub fn is_date(&self) -> bool {
-        self.borrow().is_date()
-    }
-
     /// Checks if it's a `RegExp` object.
     ///
     /// # Panics

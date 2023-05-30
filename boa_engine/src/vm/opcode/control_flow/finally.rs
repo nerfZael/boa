@@ -41,12 +41,9 @@ impl Operation for FinallyEnd {
     const INSTRUCTION: &'static str = "INST - FinallyEnd";
 
     fn execute(context: &mut Context<'_>) -> JsResult<CompletionType> {
-        let finally_candidates = context
-            .vm
-            .frame()
-            .env_stack
-            .iter()
-            .filter(|env| env.is_finally_env() && context.vm.frame().pc < env.start_address());
+        let finally_candidates = context.vm.frame().env_stack.iter().filter(|env| {
+            env.is_finally_env() && context.vm.frame().pc < (env.start_address() as usize)
+        });
 
         let next_finally = match finally_candidates.last() {
             Some(env) => env.start_address(),
@@ -56,7 +53,7 @@ impl Operation for FinallyEnd {
         let mut envs_to_pop = 0;
         match context.vm.frame().abrupt_completion {
             Some(record) if next_finally < record.target() => {
-                context.vm.frame_mut().pc = next_finally;
+                context.vm.frame_mut().pc = next_finally as usize;
 
                 while let Some(env_entry) = context.vm.frame().env_stack.last() {
                     if next_finally <= env_entry.exit_address() {
@@ -70,9 +67,11 @@ impl Operation for FinallyEnd {
                 let env_truncation_len = context.vm.environments.len().saturating_sub(envs_to_pop);
                 context.vm.environments.truncate(env_truncation_len);
             }
-            Some(record) if record.is_break() && context.vm.frame().pc < record.target() => {
+            Some(record)
+                if record.is_break() && context.vm.frame().pc < record.target() as usize =>
+            {
                 // handle the continuation of an abrupt break.
-                context.vm.frame_mut().pc = record.target();
+                context.vm.frame_mut().pc = record.target() as usize;
                 while let Some(env_entry) = context.vm.frame().env_stack.last() {
                     if record.target() == env_entry.exit_address() {
                         break;
@@ -87,9 +86,11 @@ impl Operation for FinallyEnd {
                 let env_truncation_len = context.vm.environments.len().saturating_sub(envs_to_pop);
                 context.vm.environments.truncate(env_truncation_len);
             }
-            Some(record) if record.is_continue() && context.vm.frame().pc > record.target() => {
+            Some(record)
+                if record.is_continue() && context.vm.frame().pc > record.target() as usize =>
+            {
                 // Handle the continuation of an abrupt continue
-                context.vm.frame_mut().pc = record.target();
+                context.vm.frame_mut().pc = record.target() as usize;
                 while let Some(env_entry) = context.vm.frame().env_stack.last() {
                     if env_entry.start_address() == record.target() {
                         break;
@@ -106,9 +107,10 @@ impl Operation for FinallyEnd {
                 return Ok(CompletionType::Return);
             }
             Some(record)
-                if record.is_throw_with_target() && context.vm.frame().pc < record.target() =>
+                if record.is_throw_with_target()
+                    && context.vm.frame().pc < record.target() as usize =>
             {
-                context.vm.frame_mut().pc = record.target();
+                context.vm.frame_mut().pc = record.target() as usize;
                 while let Some(env_entry) = context.vm.frame_mut().env_stack.pop() {
                     envs_to_pop += env_entry.env_num();
                     if env_entry.start_address() == record.target() {
